@@ -41,6 +41,9 @@ export default function AuthApp() {
   const t=user?translate(user):(en:string,_hi:string)=>en
   const [path,query]=page.split('?')
   const [route,id]=path.split('/')
+  useEffect(() => {
+    if (!restoring && user && (route==='login' || route==='register')) location.hash='ask'
+  }, [restoring,user,route])
   const initialPage=Math.max(1,Number(new URLSearchParams(query).get('page'))||1)
   const links=[['ask','Ask','प्रश्न'],['search','Search','खोज'],['history','History','इतिहास'],['saved','Saved','सहेजे उत्तर'],['account','Account','खाता']]
   return <>
@@ -82,6 +85,7 @@ function AuthForm({ kind, onLogin }: { kind: 'login' | 'register'; onLogin: () =
   return <section className="rounded-2xl border border-slate-200 bg-white p-7">
     <h1 className="text-3xl font-semibold">{kind === 'register' ? 'Create your account' : 'Welcome back'}</h1>
     <p className="mt-3 text-sm text-slate-600">{kind === 'register' ? 'Public registration creates a normal user account.' : 'Sign in with your registered email and password.'}</p>
+    {publicDemo && <p className="mt-3 text-sm text-slate-600">Use the email registered in this laptop's native installation. Public account creation is closed; ask the demo owner for an ordinary account. Administrator pages stay private.</p>}
     <form onSubmit={(event) => void submit(event)} className="mt-6 space-y-5">
       <label className="block">Email<input className={inputClass} type="email" required maxLength={254} autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
       {kind === 'register' && <label className="block">Username<input className={inputClass} required minLength={3} maxLength={32} pattern="[A-Za-z0-9_]{3,32}" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} /><span className="text-xs text-slate-500">3–32 letters, digits or underscores. Stored in lowercase.</span></label>}

@@ -391,7 +391,7 @@ Optional local-only browser check:
 .\scripts\demo.ps1 status
 ```
 
-Pre-provision an **ordinary** demonstration account using the native Register page privately. Public registration, administration, analytics and diagnostics are blocked. No default account/password is provided. Avoid administrator credentials and personal information in the public demonstration; authentication still protects private History/Saved/feedback. Search requires login too.
+Sign in with the registered **email** of an existing active native account. A username or an account from the separate Docker/QA installation cannot substitute for that native account. Administrator login is allowed, but administration routes stay private. Existing signed-in sessions redirect Login to Ask. Pre-provision an **ordinary** demonstration account using the native Register page privately. Public registration, administration, analytics and diagnostics are blocked. No default account/password is provided. Avoid administrator credentials and personal information in the public demonstration; authentication still protects private History/Saved/feedback. Search requires login too.
 
 **Next command when intentionally opening the public demo:**
 

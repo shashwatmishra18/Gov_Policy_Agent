@@ -28,6 +28,12 @@ User explicitly authorized startup after readiness. Public HTTPS frontend/certif
 
 At handoff the native owners and demo supervisor are active; the temporary public URL is in the private supervisor terminal/log and user response, not Git. Stop from project-root PowerShell using `.\scripts\demo.ps1 stop`, then wait/check status. The laptop must remain awake/connected and its running session available; restart generates a new URL. Small invited demo only; normal accounts must be provisioned privately. See [verification](VERIFICATION.md#explicit-public-https-activation-2026-10-11).
 
+## Sign-in investigation checkpoint
+
+Reported public URL initially matched the live tunnel; isolated ordinary native credentials succeeded visually. Fixed the reproduced signed-in Login/register form bug by redirecting restored users to Ask, and clarified the public account/email scope. Rebuilt/restarted only demo entry/connector; URL changed, native/model owners preserved. 33 focused regressions and frontend build/dependency checks passed; public/mobile login, reload/logout denial, fresh English Ask/citations, Saved and feedback passed. Existing native accounts remain active/eligible, original admin not throttled; no password reset, security weakening or public registration.
+
+User-specific failure remains unconfirmed pending their private registered-email/password entry at the new public Login page. Do not mark that diagnosis complete based on the isolated account. Public URL stays in private terminal/log/user response; demo supervisor remains running. Use existing SETUP shutdown command. Original 20 snapshots/corpus remain unchanged, temporary feedback removed; private proof/credentials ignored.
+
 ## Continuation baseline
 
 - Current schema: `0009_answer_feedback`; preserve configured databases, private `.env`, originals and existing administrator. No application reset or reprovisioning is required.
