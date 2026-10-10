@@ -1,4 +1,4 @@
-# Windows setup
+# Local setup
 
 All root commands run from the repository directory in PowerShell. Prerequisites: Python 3.12, Node 22.12+ with npm, Git and PostgreSQL 18 with Server/Command Line Tools. Tested versions are in [verification](VERIFICATION.md). Use [official PostgreSQL Windows installation](https://www.postgresql.org/download/windows/); Stack Builder packages are unnecessary. Keep PostgreSQL on loopback port 5432.
 
@@ -258,3 +258,109 @@ npm.cmd --prefix frontend audit --json
 ```
 
 Audits may return a nonzero exit code when advisories exist. Network/advisory-service failure is not a clean audit. The CPU torch wheel may be skipped; the recorded supplemental normalized query and unresolved package findings are in [SECURITY_REVIEW](SECURITY_REVIEW.md). Tested installer pip version was 26.2. Keep raw audit logs private; publish only reviewed aggregate records.
+
+## Native service controller (Windows)
+
+Existing manual terminals remain supported. From project root, after dependencies, migrations and explicit model/OCR preparation:
+
+```powershell
+.\scripts\native.ps1 preflight
+.\scripts\native.ps1 status
+.\scripts\native.ps1 start
+.\scripts\native.ps1 status
+.\scripts\native.ps1 stop
+```
+
+Preflight checks configuration, schema, dependencies and pinned preparation manifests without loading models. Start creates ignored supervisors/logs under `runtime/native-services`; repeated starts skip owners. Status distinguishes managed processes from occupied ports/file locks owned elsewhere; it is process status, not HTTP readiness. Check System status too. Stop verifies supervisor PID, creation time and command before closing its contained tree. Unmanaged terminal processes, native PostgreSQL and personal Ollama are untouched. Stop manual owners with Ctrl+C in their own terminal. Inspect logs privately.
+
+For a smaller session: `.\scripts\native.ps1 start -Services api,frontend,worker`. Start `index,rag` only with sufficient memory and no packaged model owner. Never run native and container model owners concurrently, especially with reused stores. Cancel/wait for Ask/uploads before shutdown/sleep. Jobs cannot run during sleep; after wake inspect status, start only missing owners and allow durable leases to recover. No database reset is a recovery step.
+
+## Separate Docker installation
+
+Docker Desktop Linux/WSL2 containers are optional. This is an independent local installation; native PostgreSQL/accounts/documents are preserved. Use sufficient free RAM/disk for images and one model owner; measured limits are in VERIFICATION. Base versions and application dependencies are pinned; Debian repositories are not snapshot-pinned and the backend lock has no wheel hashes. Setup does not promise byte-identical images.
+
+Project-root PowerShell, fresh package setup (existing private secrets are preserved):
+
+```powershell
+.\.venv\Scripts\python.exe backend\package_setup.py
+.\.venv\Scripts\python.exe backend\package_context.py
+docker compose config --quiet
+docker compose build api
+docker compose build frontend
+docker compose --profile tools build backup
+docker compose up -d postgres init
+docker compose run --rm migrate
+docker compose up -d api worker frontend
+docker compose run --rm api admin
+```
+
+The last command needs an interactive terminal; it uses existing hidden-input first-admin provisioning with no default accounts. Random credentials live in ignored `runtime/docker-secrets`, separate from native `.env`. Protect them with Windows permissions; preserve them with existing volumes. Regenerating a secret file does not change an existing PostgreSQL role. [Settings example](../docker/settings.example) lists nonsecret overrides; an ignored environment file can be passed with `--env-file` on every Compose command. Native `.env` is excluded from images and its values are not automatically injected.
+
+Open `http://127.0.0.1:8080/`. Only the loopback production frontend is published; database/index/Ollama have no host ports. Nginx forwards root API routes on the same origin, preserving `/auth` cookie paths and origin/Host checks. Use 127.0.0.1 for login. API health is required for UI; Search/Ask also need models and reviewed indexed evidence. Images contain no models, policy PDFs, databases or private configuration. Regenerate the allowlisted context after source edits, then rebuild.
+
+### Explicit models and corpus
+
+Initialize volumes first. A new machine explicitly prepares the same pins (network required here):
+
+```powershell
+docker compose --profile prepare run --rm prepare prepare-embedding
+docker compose --profile prepare run --rm prepare prepare-llm
+docker compose --profile prepare run --rm prepare prepare-ocr
+docker compose --profile models up -d index rag
+```
+
+CPU is the packaged default. Existing bounds/deadlines remain; slow inference can fail safely. Optional GPU needs compatible NVIDIA drivers/WSL2 support. Stop the owned RAG service before probing/recreating it:
+
+Measured CPU Ask timed out at 62.17 seconds. Two real GPU samples ran but were blocked by invalid judge evidence references; accepted factual Docker answers remain unverified. Use the existing native Windows setup for the measured answer baseline. Do not increase deadlines or relax verification solely to make a demonstration succeed. Linux Hindi OCR requires transcript review even when the engine and language-pack checks pass.
+
+```powershell
+docker compose --profile models stop rag
+docker run --rm --gpus all --entrypoint nvidia-smi gov-policy-backend:part12
+docker compose -f compose.yaml -f docker/compose.gpu.yaml --profile models up -d index rag
+```
+
+A successful GPU probe alone does not establish inference success. See VERIFICATION for actual results. No paid hosting is configured.
+
+To reuse prepared E5/Qwen, stop native model owners, set `$env:GOV_EXISTING_ROOT` to the private `GovPolicyAgent` parent of `data` containing `models` and `ollama`, and add `-f docker/compose.reuse.yaml` after `-f compose.yaml` on model commands. Stores mount read-only with separate package locks. This does not import native originals, vectors, configuration or accounts. Windows OCR executable manifests cannot run on Linux; prepare its Linux manifest. Matching existing `eng/hin` pack files are reused. GPU plus reuse uses all three override files. Never silently copy the native corpus or repull changed pins.
+
+Existing pinned language packs can also be reused explicitly, without copying the Windows executable manifest:
+
+```powershell
+docker compose --profile prepare run --rm -v "${env:GOV_EXISTING_ROOT}/ocr:/reuse-ocr:ro" prepare prepare-ocr --packs-source /reuse-ocr
+```
+
+Both pack checksums must match. The new Linux executable/version/hash is recorded separately in the package OCR volume.
+
+Use [source links/disclosures](SOURCES.md) to obtain documents privately. Admin uploads, inspects exact extraction/page quality, verifies origin, records a separate rights/applicability review, reviews OCR critical values, then explicitly queues rebuilding. A fresh package contains no policy corpus. Self-authored test fixtures are not government evidence or accuracy measurements.
+
+### Operation and backup/restore
+
+```powershell
+docker compose --profile models ps
+docker compose logs --tail 50 api worker index rag
+docker compose --profile models restart api worker index rag
+docker compose --profile models down
+```
+
+Logs are private local diagnosis. Ordinary `down` preserves volumes. **Adding `--volumes` permanently removes this package's private data; it is not routine shutdown or sleep recovery.** After wake inspect Docker/owners, then start missing services with the same project/environment/overrides. File locks and durable leases remain authoritative; expired interrupted jobs recover or reach the existing bounded attempt limit.
+
+Back up only an offline package; stop all its application services while PostgreSQL remains running:
+
+```powershell
+docker compose --profile models stop frontend api worker index rag
+$env:GOV_BACKUP_DIR = "$PWD/runtime/package-backups/backup-01"
+docker compose --profile tools run --rm backup backup
+```
+
+The private bundle contains a PostgreSQL 18 custom dump, immutable originals, schema/model pins and SHA256 checksums. Accounts/history/feedback/OCR text/reviews are private. Keep installation secrets separately protected; role/JWT secrets are not in the dump. Models/language packs are preparation assets, vectors are rebuildable, and both are excluded. The tool refuses another application DB connection or an existing bundle. A failed bundle without a manifest is incomplete.
+
+Restore only into a **new empty isolated project** with the same protected secret files and selected backup directory. Never overwrite native or existing package data:
+
+```powershell
+docker compose -p gov-restored up -d postgres init
+docker compose -p gov-restored --profile tools run --rm backup restore
+docker compose -p gov-restored run --rm migrate
+docker compose -p gov-restored up -d api worker frontend
+```
+
+Stop the original frontend first or set a separate `GOV_WEB_PORT`. Restore checks schema emptiness, empty originals, checksums, pins and archive paths before writing. A mid-restore failure needs diagnosis in that isolated target, not another restore over nonempty records. Prepare/reuse models for that project, start its single index/RAG owner, and queue a new index rebuild. SQL provenance/answer snapshots remain; verify original downloads and private history. Retention still applies. Unset `GOV_BACKUP_DIR` afterward. Isolated rehearsal results are in VERIFICATION.

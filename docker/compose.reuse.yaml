@@ -1,0 +1,6 @@
+# Read-only reuse; these paths must be explicitly supplied, never inferred at build time.
+services:
+  index:
+    volumes: ["${GOV_EXISTING_ROOT:?Set existing private model root}/models:/state/models:ro"]
+  rag:
+    volumes: ["${GOV_EXISTING_ROOT:?Set existing private model root}/ollama:/state/ollama:ro"]

@@ -2,6 +2,8 @@
 
 Reviewed 2026-10-06 for the existing local Windows application. This is an implementation review with regression checks, not a penetration-test certificate or production approval. Private configuration, source eligibility, assessment snapshots and model pins are preserved.
 
+Part 12 adds an internal container network, a loopback-only frontend port, fixed service addresses, non-root/read-only application containers, memory/PID limits and private file-based secrets. Existing Host/origin/cookie rules and request/worker bounds remain. Backup is offline; restore accepts only an empty isolated installation. These changes do not resolve the Python findings below. Image OS packages have not received an independent vulnerability assessment. Local HTTP is a trusted-laptop demonstration profile without production HTTPS or hostile-parser isolation. See [packaging verification](VERIFICATION.md) for checks actually executed.
+
 ## Evidenced fixes
 
 Before the changes, regression requests with an unrelated Host and a 65,537-byte body both returned 200. [Request middleware](../backend/app/request_limits.py) now rejects unrelated/malformed/duplicate Host values and limits actual non-upload body streams to 65,536 bytes before JSON parsing. Missing or understated Content-Length cannot bypass the cap. The API allows loopback hosts and explicitly configured origin hosts; the private index allows loopback hosts only. The exact raw upload route retains its existing authenticated 50 MiB streaming limit. API responses add nosniff; protected originals already used it.

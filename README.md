@@ -20,6 +20,7 @@ GOV-CS-028 is a B.Tech student project for exploring document-grounded governmen
 - Private helpful/not-helpful feedback with optional fixed reasons and plain-text comments; update/removal on accessible factual answers.
 - Admin-only aggregate analytics with explicit UTC windows, outcome/language counts, recorded latency, feedback participation and processing counts.
 - Frozen local evaluation with separate development controls, exact provenance checks and private raw outputs; bounded API/index requests and a dated security review.
+- Separate local Compose packaging, production frontend routing, private volumes, explicit provisioning and offline backup/empty-target restore; native ownership scripts preserve manual Windows operation.
 
 ## Stack
 
@@ -27,9 +28,19 @@ React, TypeScript, Vite and Tailwind CSS; FastAPI, SQLAlchemy, psycopg and Alemb
 
 ## Setup and usage
 
-See [Windows setup](docs/SETUP.md) for dependencies, private database configuration, migrations, startup and checks. Python 3.12, Node 22.12+ and PostgreSQL 18 are the documented baseline.
+See [local setup](docs/SETUP.md) for dependencies, private database configuration, migrations, startup and checks. Python 3.12, Node 22.12+ and PostgreSQL 18 are the native baseline.
 
-Run the API, frontend, ingestion worker, single-owner index service and answer worker in separate terminals. Open `http://127.0.0.1:5173/`. Sign in, then use `/#search` for exact passages or `/#ask` for questions explicitly about a dated historical document. History and Saved provide paginated private records. Open an answered or partial result to save/unsave; saved records expire with the original answer after 30 days and cannot bypass source revocation. Answer details include private feedback (optional comment up to 500 characters); votes do not verify factual correctness. Admin Analytics reports retained database aggregates, without private question/comment browsing. Account controls the English/Hindi interface preference (Hinglish uses Hindi). System status remains available in the footer. Admin can upload PDF/TXT, inspect extraction, record evidence-backed eligibility reviews and queue index rebuilds. API documentation is at `http://127.0.0.1:8000/docs`.
+Native Windows operation uses the existing terminals or `scripts/native.ps1 preflight/start/status/stop`; open `http://127.0.0.1:5173/`. The separate Docker installation serves built React through Nginx at `http://127.0.0.1:8080/`, with private PostgreSQL, ingestion, index and RAG services. It has independent accounts/storage and requires explicit model/corpus preparation. Only the frontend loopback port is published. See [setup](docs/SETUP.md) for exact commands, model reuse, shutdown and backup/restore, and [verification](docs/VERIFICATION.md) for tested modes and remaining gaps.
+
+Sign in, then use Search for exact passages or Ask for dated historical-source questions. History/Saved are private and expire after 30 days; saving cannot bypass source revocation. Answer details contain citations, evidence-quality information and optional private feedback. Admin Analytics shows retained aggregates rather than private question/comment listings. Account selects English/Hindi UI (Hinglish maps to Hindi). Admin uploads, reviews extraction/rights and explicitly queues indexing. System status is in the footer; native API documentation is at `http://127.0.0.1:8000/docs`, packaged documentation at `http://127.0.0.1:8080/docs`.
+
+## Hardware and measured evaluation
+
+Measured on Windows 11, i5-13500HX, about 15.7 GiB usable RAM and RTX 4050 with 6 GiB VRAM. E5 runs on CPU with two threads; Qwen uses one bounded runtime. Docker adds VM/image overhead; available memory, other workloads and CPU/GPU mode affect latency. Inspect owners/resources before starting models and keep sufficient disk for pinned runtime images plus private model stores. [Evaluation timings](docs/EVALUATION.md) separate cold/warm/no-generation samples; they are not throughput guarantees.
+
+Docker packaging is operationally verified for ingestion, retrieval, private account features and backup/restore. Accepted factual Qwen answers in Docker remain unverified: the CPU sample timed out; two GPU samples failed the unchanged evidence-reference guard. GPU loading alone is not answer verification. Native Windows remains the supported answer baseline. Linux Hindi OCR produced a pending-review transcript rather than an exact match. See the dated verification record for measurements and test scope.
+
+Part 11's agent-authored/source-reviewed freeze remains unchanged: gold-span hit@5 **9/9**, factual retention **1/9 (partial)**, behavioral matches **16/24**, final citation validity **1/1**, and **nine separate controls rejected**. These one-source results are not broad accuracy or precision@5. Independent review and calibration remain unavailable; same-model support and [unresolved Python advisories](docs/SECURITY_REVIEW.md) remain limitations.
 
 ## Current limitations
 

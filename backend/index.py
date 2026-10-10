@@ -15,7 +15,7 @@ from app.vector_index import Runtime, queue, status
 from app.request_limits import BodyLimitMiddleware, StrictHostMiddleware
 
 
-def service(runtime, key):
+def service(runtime, key, hosts=None):
     guard = threading.Lock()
     stop = threading.Event()
 
@@ -35,7 +35,15 @@ def service(runtime, key):
 
     app = FastAPI(lifespan=lifespan, docs_url=None, openapi_url=None)
     app.add_middleware(BodyLimitMiddleware)
-    app.add_middleware(StrictHostMiddleware, allowed_hosts=['127.0.0.1','localhost'], www_redirect=False)
+    app.add_middleware(StrictHostMiddleware, allowed_hosts=hosts or ['127.0.0.1','localhost'], www_redirect=False)
+
+    @app.get('/health/ready')
+    def ready():
+        # Runtime is constructed only after offline model validation and the owner lock.
+        try:
+            if not schema_ready(runtime.engine):raise ValueError('schema unavailable')
+        except Exception:raise HTTPException(503,'Index database unavailable') from None
+        return {'status':'ready'}
 
     def authorize(x_index_key: str = Header(default='')):
         if not hmac.compare_digest(x_index_key, key): raise HTTPException(403, 'Forbidden')
@@ -64,11 +72,13 @@ if __name__ == '__main__':
             print({'generation': str(queue(db).id)} if args.command == 'rebuild' else status(db))
     else:
         root = settings.data_dir.parent / 'vectors'; root.mkdir(parents=True, exist_ok=True)
-        with FileLock(str(root / 'owner.lock'), timeout=0):
+        lock=settings.owner_path('index');lock.parent.mkdir(parents=True,exist_ok=True)
+        with FileLock(str(lock), timeout=0):
             runtime = Runtime(settings, engine)
             if args.command == 'once': print({'job_processed': runtime.run_once()})
             elif args.command == 'reconcile': print(runtime.reconcile())
             else:
                 import uvicorn
-                uvicorn.run(service(runtime, internal_key(settings)), host='127.0.0.1', port=8011,
+                container=settings.deployment_mode=='container_local'
+                uvicorn.run(service(runtime, internal_key(settings), ['127.0.0.1','localhost','index'] if container else None), host='0.0.0.0' if container else '127.0.0.1', port=8011,
                     workers=1, access_log=False, proxy_headers=False)

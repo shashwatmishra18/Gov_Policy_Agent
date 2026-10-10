@@ -1,0 +1,120 @@
+name: gov-policy-local
+x-backend: &backend
+  image: gov-policy-backend:part12
+  build: {context: ./runtime/package-context, dockerfile: docker/backend.Dockerfile}
+  init: true
+  read_only: true
+  tmpfs: [/tmp]
+  pids_limit: 256
+  cpus: 2
+  mem_limit: 768m
+  stop_grace_period: 20s
+  restart: "no"
+  networks: [private]
+  secrets: [app_password, test_password, jwt_secret]
+  environment: &environment
+    GOV_DEPLOYMENT_MODE: container_local
+    GOV_ENVIRONMENT: development
+    GOV_DB_HOST: postgres
+    GOV_DB_NAME: gov_package
+    GOV_DB_USER: gov_app
+    GOV_INDEX_URL: http://index:8011
+    GOV_DATA_DIR: /state/data
+    GOV_LOCKS_DIR: /state/locks
+    GOV_LLM_CPU_ONLY: "true"
+    GOV_CORS_ORIGINS: '["http://127.0.0.1:${GOV_WEB_PORT:-8080}"]'
+    GOV_TEST_DB_NAME: gov_policy_test
+    GOV_TEST_DB_USER: gov_test
+  volumes: &volumes
+    - originals:/state/data
+    - embedding:/state/models
+    - llm:/state/ollama
+    - ocr:/state/ocr
+    - vectors:/state/vectors
+    - locks:/state/locks
+services:
+  postgres:
+    image: postgres:18.6-bookworm
+    environment: {POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password, POSTGRES_INITDB_ARGS: --data-checksums}
+    secrets: [postgres_password, app_password, test_password]
+    volumes: [postgres:/var/lib/postgresql, ./runtime/package-context/docker/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro]
+    networks: [private]
+    mem_limit: 512m
+    healthcheck: {test: [CMD-SHELL, "pg_isready -U postgres"], interval: 5s, timeout: 3s, retries: 20}
+  init:
+    <<: *backend
+    user: root
+    command: [init]
+  migrate:
+    <<: *backend
+    command: [migrate]
+    depends_on: {postgres: {condition: service_healthy}, init: {condition: service_completed_successfully}}
+  api:
+    <<: *backend
+    command: [api]
+    depends_on: {migrate: {condition: service_completed_successfully}}
+    healthcheck: {test: [CMD, python, docker/entrypoint.py, health, api], interval: 10s, timeout: 5s, retries: 12}
+  worker:
+    <<: *backend
+    command: [worker]
+    depends_on: {migrate: {condition: service_completed_successfully}}
+    healthcheck: {test: [CMD, python, docker/entrypoint.py, health, worker], interval: 15s, timeout: 5s, retries: 6}
+  frontend:
+    build: {context: ./runtime/package-context, dockerfile: docker/frontend.Dockerfile}
+    image: gov-policy-frontend:part12
+    ports: ["127.0.0.1:${GOV_WEB_PORT:-8080}:8080"]
+    networks: [private, web]
+    depends_on: {api: {condition: service_healthy}}
+    healthcheck: {test: [CMD, wget, -q, -O, /dev/null, http://127.0.0.1:8080/health/ready], interval: 10s, timeout: 5s, retries: 12}
+    mem_limit: 128m
+  index:
+    <<: *backend
+    profiles: [models]
+    command: [index]
+    mem_limit: 1800m
+    depends_on: {migrate: {condition: service_completed_successfully}}
+    healthcheck: {test: [CMD, python, docker/entrypoint.py, health, index], interval: 15s, timeout: 5s, retries: 20, start_period: 90s}
+  rag:
+    <<: *backend
+    profiles: [models]
+    command: [rag]
+    mem_limit: 5g
+    depends_on: {index: {condition: service_healthy}}
+    healthcheck: {test: [CMD, python, docker/entrypoint.py, health, rag], interval: 15s, timeout: 5s, retries: 20, start_period: 90s}
+  prepare:
+    <<: *backend
+    profiles: [prepare]
+    read_only: false
+    networks: [private, web]
+    mem_limit: 1800m
+    command: [prepare-embedding]
+  backup:
+    profiles: [tools]
+    image: gov-policy-backup:part12
+    build: {context: ./runtime/package-context, dockerfile: docker/backup.Dockerfile}
+    entrypoint: [python3, /backup-tool.py]
+    command: [backup]
+    networks: [private]
+    secrets: [app_password]
+    environment: {PGHOST: postgres, PGDATABASE: gov_package, PGUSER: gov_app}
+    volumes:
+      - originals:/state/data
+      - '${GOV_BACKUP_DIR:-./runtime/package-backups}:/backup'
+    mem_limit: 256m
+    pids_limit: 64
+volumes:
+  postgres:
+  originals:
+  embedding:
+  llm:
+  ocr:
+  vectors:
+  locks:
+networks:
+  private: {internal: true}
+  web:
+secrets:
+  postgres_password: {file: '${GOV_SECRETS_DIR:-./runtime/docker-secrets}/postgres_password'}
+  app_password: {file: '${GOV_SECRETS_DIR:-./runtime/docker-secrets}/app_password'}
+  test_password: {file: '${GOV_SECRETS_DIR:-./runtime/docker-secrets}/test_password'}
+  jwt_secret: {file: '${GOV_SECRETS_DIR:-./runtime/docker-secrets}/jwt_secret'}

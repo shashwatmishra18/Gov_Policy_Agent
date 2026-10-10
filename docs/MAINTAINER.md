@@ -1,6 +1,20 @@
 # Maintainer state
 
-Updated 2026-10-06. Parts 1–11 are implemented. Stop here; Part 12 requires a new user instruction. The recurring beginner-explanation requirement is withdrawn; future work uses concise technical documentation.
+Updated 2026-10-11. Parts 1–12 have implementation delivered, with partial/unverified requirements recorded below and in the requirement matrix. No further phase or public deployment is authorized. Beginner learning/viva documents remain withdrawn.
+
+## Part 12 recovered release state
+
+The interrupted checkpoint never committed/pushed: local and remote main were still `475ebe2e6b380c6b722e94cb1b64df3d197b08e9`. All saved drafts were recovered without reset. Native private configuration, accounts, originals and models were preserved; repeated read-only checks kept all 20 answer digests and corpus counts 4/171/410/0 unchanged, with zero live feedback.
+
+Delivered: native verified-owner preflight/start/status/stop; Linux parent-death process containment; separate Compose installation with built Nginx frontend, private PostgreSQL/non-superuser roles, explicit secrets/migrations/admin/model preparation, read-only model reuse, platform OCR manifests, health/resource limits, offline checksummed backup and empty-target restore. Dynamic API DNS fixes routing after replacement. Public build context is allowlisted; Tesseract/Ollama license texts are retained.
+
+Executed: native 146 tests; Linux 80 PostgreSQL/real-parser/E5 integration tests plus real descendant cleanup; dependency checks, frontend typecheck/build/audit and frozen evaluation integrity; isolated migrations/auth/upload/original/OCR/index/search, Hindi mobile/two-user/browser feedback/citation/analytics checks, backup/restore, down/up, queued rebuild recovery and duplicate-owner rejection. Every restored SQL table digest and both original checksums matched the offline bundle. Full evidence, initial failures and command scope are in [VERIFICATION.md](VERIFICATION.md).
+
+Partial: CPU Ask timed out (62.17 seconds); GPU Qwen loaded fully but two samples failed unchanged judge evidence-reference validation (51.58/6.06 seconds). No factual Docker model answer was accepted. Stored-fixture browser checks and judge-double integration tests are explicitly not generation/accuracy measurements. Native Windows remains the measured answer baseline. Linux Hindi OCR CER 0.0366/WER 0.0286 on one synthetic scan remains pending review/ineligible. Frozen evaluation, prompts/guards and real source rights were not tuned or changed.
+
+Resume/run: use [SETUP.md](SETUP.md), starting with `.\scripts\native.ps1 status` and `preflight`; start only missing owners. Do not reprovision the native installation. Compose uses generated `runtime/package-context` (regenerate after source changes). QA/restore projects use independent volumes and ignored private backups; normal shutdown preserves them. Never run native and container model owners together. Nine unrelated Docker containers and personal Ollama must remain untouched. Future accepted-answer container validation needs explicit authorization and sufficient resources; it must preserve guards and distinguish development samples from untouched evaluation.
+
+Final local state: both isolated Compose projects were shut down normally without deleting volumes; private rehearsal bundles remain ignored. After continuation, Docker Desktop was no longer running and was not restarted unnecessarily. Native API/frontend/ingestion worker were started once and are managed; index/RAG remain stopped. Use status/preflight before starting model owners.
 
 ## Continuation baseline
 
@@ -25,7 +39,7 @@ Keep pinned multilingual E5-small on CPU/two threads, normalized 384-dimensional
 
 | Part | Planned work |
 | --- | --- |
-| 12 | Local Compose packaging, backup/restore and final project deliverables |
+| 12 | Delivered local packaging/operations; accepted factual Docker inference remains unverified; public/cloud deployment and formal college report/video are deferred |
 
 HTML remains after baseline and DOCX deferred. No paid API, fine-tuning or cloud baseline. Reranking, HyDE, translation frameworks and monitoring frameworks require measured need. Model selection must check license, language support and memory; never mix embedding revisions/dimensions. Start conservatively and benchmark before increasing model/context/batch sizes.
 

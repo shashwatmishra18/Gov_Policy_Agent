@@ -20,11 +20,11 @@ class Generator(Protocol):
 
 
 class LocalRetriever:
-    def __init__(self,settings): self.key=internal_key(settings)
+    def __init__(self,settings): self.key=internal_key(settings); self.url=settings.index_url
     async def retrieve(self,question,filters):
         async with httpx.AsyncClient(trust_env=False,timeout=20) as client:
             try:
-                response=await client.post('http://127.0.0.1:8011/query',
+                response=await client.post(self.url+'/query',
                     headers={'X-Index-Key':self.key},json={'question':question,'count':5,**filters})
                 if response.status_code==422: raise RagError('query_token_limit')
                 if response.status_code!=200: raise RagError('retrieval_unavailable')

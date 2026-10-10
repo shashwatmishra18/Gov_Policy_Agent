@@ -11,6 +11,7 @@ from .auth import now
 from .document_models import Chunk, Document, DocumentVersion, ExtractedPage, IngestionJob
 from .extraction import chunks, PROFILE, REVISION
 from .storage import checksum_file, directories, original, parser_command
+from .processes import spawn_owned
 
 
 def claim(engine, settings):
@@ -98,14 +99,13 @@ def process_claim(engine, settings, claimed):
     job_id, token, key, format, expected_checksum = claimed
     temporary = directories(settings) / "temporary"
     output, progress_path = temporary / f"{token.hex}.json", temporary / f"{token.hex}.progress"
-    process = None
+    process = tree = None
     try:
         path = original(settings, key)
         if not path.is_file() or checksum_file(path) != expected_checksum:
             return finish(engine, job_id, token, {"error": "original_missing_or_changed"})
         command, environment = parser_command(settings, path, format, output, progress_path)
-        process = subprocess.Popen(command, env=environment, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                                   creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        process,tree = spawn_owned(command, env=environment, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         deadline = time.monotonic() + settings.parser_seconds
         while process.poll() is None:
             if time.monotonic() > deadline:
@@ -131,6 +131,7 @@ def process_claim(engine, settings, claimed):
         # No text, path, SQL parameters or secret exception strings logged.
         return finish(engine, job_id, token, {"error": "processing_failed"})
     finally:
+        if tree: tree.close()
         if process is not None and process.poll() is None:
             process.kill(); process.wait()
         for path in (output, progress_path, Path(str(output) + ".part"), Path(str(progress_path) + ".part")):

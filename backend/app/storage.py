@@ -55,12 +55,14 @@ def parser_command(settings, path, format, output, progress=None, validate=False
 
 
 def validate_file(settings, path, format):
+    from .processes import spawn_owned
     output = directories(settings) / "temporary" / f"{uuid4().hex}.json"
     command, environment = parser_command(settings, path, format, output, validate=True)
+    process = tree = None
     try:
-        result = subprocess.run(command, env=environment, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                                timeout=settings.parser_seconds, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
-        if result.returncode or not output.exists():
+        process,tree = spawn_owned(command, env=environment, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        process.wait(timeout=settings.parser_seconds)
+        if process.returncode or not output.exists():
             raise HTTPException(422, "File parser failed")
         payload = json.loads(output.read_text("utf-8"))
         if "error" in payload:
@@ -69,6 +71,8 @@ def validate_file(settings, path, format):
     except subprocess.TimeoutExpired:
         raise HTTPException(422, "File parser exceeded its time limit") from None
     finally:
+        if tree: tree.close()
+        if process and process.poll() is None: process.wait(timeout=10)
         output.unlink(missing_ok=True)
         Path(str(output) + ".part").unlink(missing_ok=True)
 

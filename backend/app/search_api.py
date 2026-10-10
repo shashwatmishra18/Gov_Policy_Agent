@@ -98,7 +98,7 @@ def retry(generation_id: UUID, user: User = Depends(admin_user), db: Session = D
 def search(body: SearchInput, request: Request, user: User = Depends(current_user), db: Session = Depends(get_db)):
     throttle(db, request, str(user.id), 'search')
     try:
-        result = httpx.post('http://127.0.0.1:8011/query', json=body.model_dump(mode='json'),
+        result = httpx.post(request.app.state.settings.index_url+'/query', json=body.model_dump(mode='json'),
             headers={'X-Index-Key': internal_key(request.app.state.settings)}, timeout=20, trust_env=False)
         if result.status_code == 422: raise HTTPException(422, 'Question exceeds tokenizer limits; shorten it')
         if result.status_code != 200: raise HTTPException(503, 'Index service busy or unavailable')

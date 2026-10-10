@@ -1,0 +1,5 @@
+# Optional Compose --env-file settings. No passwords; setup creates private secret files.
+GOV_WEB_PORT=8080
+GOV_SECRETS_DIR=./runtime/docker-secrets
+# Only for compose.reuse.yaml; do not copy private data into images.
+# GOV_EXISTING_ROOT=C:/Users/YOUR_NAME/AppData/Local/GovPolicyAgent

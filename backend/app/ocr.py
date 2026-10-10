@@ -17,7 +17,7 @@ from .document_models import Document, DocumentVersion, ExtractedPage, Ingestion
 from .extraction import paragraphs
 from .extraction_artifacts import pages_for, accepted
 from .ocr_models import ExtractionRevision, ExtractionPage, ExtractionState
-from .ollama_local import WindowsJob
+from .processes import spawn_owned
 from .storage import directories, original, checksum_file
 
 PACK_HASHES = {'eng':'7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2',
@@ -29,7 +29,8 @@ def prepared(settings):
     manifest = json.loads((root/'prepared.json').read_text('utf-8'))
     exe = Path(manifest['executable'])
     if not exe.is_absolute() or checksum_file(exe) != manifest['executable_sha256']: raise ValueError('ocr_engine_changed')
-    if manifest['version'] != 'tesseract v5.4.0.20240606': raise ValueError('ocr_engine_version')
+    expected = 'tesseract v5.4.0.20240606' if os.name=='nt' else 'tesseract 5.4.0'
+    if manifest['version'] != expected: raise ValueError('ocr_engine_version')
     for language, digest in PACK_HASHES.items():
         if checksum_file(root/f'{language}.traineddata') != digest or manifest['packs'][language]['sha256'] != digest:
             raise ValueError('ocr_language_pack_changed')
@@ -109,10 +110,8 @@ def run_page(settings, request, beat):
         request_file = work/'request.json'
         request_file.write_text(json.dumps(request),encoding='utf-8')
         environment = {k:v for k,v in os.environ.items() if not k.startswith('GOV_')}
-        process = subprocess.Popen([sys.executable,str(ROOT/'backend/ocr_child.py'),str(request_file)],
-            stdin=subprocess.PIPE,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,env=environment,
-            creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
-        tree = WindowsJob();tree.assign(process)
+        process,tree = spawn_owned([sys.executable,str(ROOT/'backend/ocr_child.py'),str(request_file)],
+            stdin=subprocess.PIPE,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,env=environment)
         process.stdin.write(b'1');process.stdin.flush();process.stdin.close()
         deadline = time.monotonic()+request['seconds']
         while process.poll() is None:

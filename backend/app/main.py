@@ -45,7 +45,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if application.state.engine is not None:
             application.state.engine.dispose()
 
-    app = FastAPI(title=settings.app_name, version="0.11.0", lifespan=lifespan)
+    app = FastAPI(title=settings.app_name, version="0.12.0", lifespan=lifespan)
     app.state.settings = settings
     install_database(app, settings)
     app.include_router(router)
@@ -98,14 +98,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/health/live", response_model=LiveResponse)
     async def live():
-        return LiveResponse(status="alive", project_id="GOV-CS-028", phase=11)
+        return LiveResponse(status="alive", project_id="GOV-CS-028", phase=12)
 
     @app.get("/health/ready", response_model=ReadyResponse)
     def ready():
         database_ok = schema_ready(app.state.engine)
         auth_ok = settings.jwt_secret is not None
         data = ReadyResponse(
-            status="ready" if database_ok and auth_ok else "not_ready", project_id="GOV-CS-028", phase=11,
+            status="ready" if database_ok and auth_ok else "not_ready", project_id="GOV-CS-028", phase=12,
             required_dependencies={"configuration": "validated",
                                    "postgresql": "connected_schema_current" if database_ok else "unavailable_or_migrations_missing",
                                    "authentication": "configured" if auth_ok else "unconfigured"},

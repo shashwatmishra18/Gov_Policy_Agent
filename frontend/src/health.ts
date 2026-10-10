@@ -1,7 +1,7 @@
 export type Health = {
   status: 'ready'
   project_id: 'GOV-CS-028'
-  phase: 11
+  phase: 12
   required_dependencies: Record<string, string>
   optional_services: Record<string, string>
 }
@@ -15,7 +15,7 @@ export async function fetchHealth(signal: AbortSignal): Promise<{ health: Health
   const data: unknown = await response.json()
   if (typeof data !== 'object' || data === null) throw new Error('Invalid health response')
   const value = data as Partial<Health>
-  if (value.status !== 'ready' || value.project_id !== 'GOV-CS-028' || value.phase !== 11
+  if (value.status !== 'ready' || value.project_id !== 'GOV-CS-028' || value.phase !== 12
       || !isStringRecord(value.required_dependencies) || !isStringRecord(value.optional_services)) {
     throw new Error('Backend returned an unexpected health response')
   }

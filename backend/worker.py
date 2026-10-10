@@ -8,6 +8,8 @@ from app.ocr import run_once as ocr_once
 from filelock import FileLock
 
 if __name__ == "__main__":
+    from app.processes import install_shutdown
+    install_shutdown()
     parser = argparse.ArgumentParser()
     parser.add_argument("--once", action="store_true")
     parser.add_argument("--reconcile", action="store_true")
@@ -15,7 +17,8 @@ if __name__ == "__main__":
     settings = Settings()
     engine = make_engine(settings)
     settings.data_dir.parent.mkdir(parents=True, exist_ok=True)
-    owner = FileLock(str(settings.data_dir.parent/'ingestion-owner.lock'), timeout=0)
+    lock=settings.owner_path('ingestion');lock.parent.mkdir(parents=True,exist_ok=True)
+    owner = FileLock(str(lock), timeout=0)
     owner.acquire()
     try:
         if not schema_ready(engine):
@@ -30,6 +33,8 @@ if __name__ == "__main__":
                 try:
                     if not run_once(engine, settings) and not ocr_once(engine,settings):
                         time.sleep(2)
+                    if settings.locks_dir:
+                        (settings.locks_dir/'ingestion.ready').write_text(str(time.time()))
                 except Exception:
                     print("Worker unavailable; will reconnect. No private error details logged.", flush=True)
                     time.sleep(5)

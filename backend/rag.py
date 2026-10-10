@@ -15,11 +15,14 @@ async def serve(worker):
         if not await worker.once(): await asyncio.sleep(0.2)
 
 if __name__=='__main__':
+    from app.processes import install_shutdown
+    install_shutdown()
     settings=Settings();engine=make_engine(settings)
     if not schema_ready(engine): raise SystemExit('Current PostgreSQL migration required')
     root=settings.data_dir.parent/'ollama';root.mkdir(parents=True,exist_ok=True)
     try:
-        with FileLock(str(root/'owner.lock'),timeout=0),OllamaHost(settings) as host:
+        lock=settings.owner_path('rag');lock.parent.mkdir(parents=True,exist_ok=True)
+        with FileLock(str(lock),timeout=0),OllamaHost(settings) as host:
             worker=Worker(settings,engine,host);worker.recover()
             print('Local RAG worker ready; one pending job; project Ollama 127.0.0.1:11435. Ctrl+C to stop.',flush=True)
             try: asyncio.run(serve(worker))

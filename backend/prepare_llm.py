@@ -7,7 +7,8 @@ from app.ollama_local import OllamaHost, URL, TAG
 
 if __name__ == '__main__':
     settings = Settings(); root = settings.data_dir.parent/'ollama'; root.mkdir(parents=True,exist_ok=True)
-    with FileLock(str(root/'owner.lock'),timeout=0), OllamaHost(settings):
+    lock=settings.owner_path('rag');lock.parent.mkdir(parents=True,exist_ok=True)
+    with FileLock(str(lock),timeout=0), OllamaHost(settings):
         with httpx.Client(trust_env=False,timeout=120) as client:
             with client.stream('POST',URL+'/api/pull',json={'model':TAG,'stream':True}) as response:
                 response.raise_for_status(); last = None
@@ -32,6 +33,6 @@ if __name__ == '__main__':
             'context_tokens':4096,'output_tokens':768,'temperature':0,'seed':28,'think':False}
         if expected.exists() and json.loads(expected.read_text('utf-8'))!=manifest:
             raise RuntimeError('Prepared model differs from pinned record; review deliberately before changing it')
-        expected.write_text(json.dumps(manifest,indent=2)+'\n','utf-8')
+        if not expected.exists(): expected.write_text(json.dumps(manifest,indent=2)+'\n','utf-8')
         (root/'prepared.json').write_text(json.dumps(manifest),'utf-8')
         print(json.dumps(manifest),flush=True)

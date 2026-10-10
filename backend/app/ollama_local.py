@@ -2,6 +2,7 @@
 import ctypes
 from ctypes import wintypes
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import time
@@ -42,6 +43,7 @@ class WindowsJob:
 class OllamaHost:
     def __init__(self, settings):
         self.root = settings.data_dir.parent/'ollama'
+        self.cpu_only = settings.llm_cpu_only
         self.process = self.job = None
 
     def start(self):
@@ -49,18 +51,17 @@ class OllamaHost:
             try: client.get(URL+'/api/version')
             except httpx.HTTPError: pass
             else: raise RuntimeError('Project Ollama port already occupied; stop the other project owner')
-        binary = Path(os.environ['LOCALAPPDATA'])/'Programs/Ollama/ollama.exe'
-        if not binary.is_file(): raise RuntimeError('Official Ollama Windows installation required')
+        binary = Path(os.environ['LOCALAPPDATA'])/'Programs/Ollama/ollama.exe' if os.name=='nt' else Path(shutil.which('ollama') or '/missing-ollama')
+        if not binary.is_file(): raise RuntimeError('Pinned official Ollama installation required')
         self.root.mkdir(parents=True,exist_ok=True)
         env = os.environ.copy()
         env.update(OLLAMA_HOST='127.0.0.1:11435',OLLAMA_MODELS=str(self.root/'models'),
             OLLAMA_NO_CLOUD='1',OLLAMA_NOHISTORY='1',OLLAMA_NUM_PARALLEL='1',
             OLLAMA_MAX_LOADED_MODELS='1',OLLAMA_MAX_QUEUE='1',OLLAMA_CONTEXT_LENGTH='4096',
             OLLAMA_LOAD_TIMEOUT='60s',OLLAMA_KEEP_ALIVE='5m',OLLAMA_DEBUG='0')
-        self.job = WindowsJob()
-        self.process = subprocess.Popen([str(binary),'serve'],env=env,stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,creationflags=subprocess.CREATE_NO_WINDOW)
-        self.job.assign(self.process)
+        if self.cpu_only: env['CUDA_VISIBLE_DEVICES']='-1'
+        from .processes import spawn_owned
+        self.process,self.job = spawn_owned([str(binary),'serve'],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
         for _ in range(100):
             if self.process.poll() is not None: self.stop(); raise RuntimeError('Project Ollama failed to start')
             try:

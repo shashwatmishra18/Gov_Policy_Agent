@@ -1,0 +1,4 @@
+services:
+  rag:
+    environment: {GOV_LLM_CPU_ONLY: "false"}
+    gpus: all

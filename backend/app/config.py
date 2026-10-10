@@ -16,9 +16,13 @@ class Settings(BaseSettings):
         extra="forbid", hide_input_in_errors=True,
     )
     app_name: str = Field(default="Government Policy Assistant", min_length=1, max_length=100)
+    deployment_mode: Literal['native', 'container_local'] = 'native'
     environment: Literal["development", "test", "production"] = "development"
     cors_origins: list[str] = ["http://127.0.0.1:5173"]
-    db_host: Literal["127.0.0.1", "localhost"] = "127.0.0.1"
+    db_host: str = '127.0.0.1'
+    index_url: str = 'http://127.0.0.1:8011'
+    locks_dir: Path | None = None
+    llm_cpu_only: bool = False
     db_port: int = Field(default=5432, ge=1, le=65535)
     db_name: str = "gov_policy"
     db_user: str = "gov_app"
@@ -76,8 +80,19 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def secure_production(self):
+        if self.deployment_mode == 'native':
+            if self.db_host not in ('127.0.0.1','localhost') or self.index_url != 'http://127.0.0.1:8011':
+                raise ValueError('Native database/index must remain loopback')
+        elif self.db_host != 'postgres' or self.index_url != 'http://index:8011':
+            raise ValueError('Container mode requires explicit private Compose service addresses')
         if self.environment == "production" and not self.cookie_secure:
             raise ValueError("Production requires Secure cookies and HTTPS")
         if self.db_name == self.test_db_name:
             raise ValueError("Test database must differ from application database")
         return self
+
+    def owner_path(self, name):
+        return (self.locks_dir / (name+'.lock')) if self.locks_dir else {
+            'index': self.data_dir.parent/'vectors/owner.lock',
+            'rag': self.data_dir.parent/'ollama/owner.lock',
+            'ingestion': self.data_dir.parent/'ingestion-owner.lock'}[name]
