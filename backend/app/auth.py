@@ -151,7 +151,8 @@ def register(body: Registration, request: Request, db: Session = Depends(get_db)
 def login(body: Login, request: Request, response: Response, db: Session = Depends(get_db)):
     settings = request.app.state.settings
     throttle(db, request, body.email, "login")
-    user = db.scalar(select(User).where(User.email == body.email))
+    # Serialize password verification/session creation with private local recovery.
+    user = db.scalar(select(User).where(User.email == body.email).with_for_update())
     valid = password_hash.verify(body.password.get_secret_value(), user.password_hash if user else DUMMY_HASH)
     if not valid or user is None or not user.active:
         raise HTTPException(401, "Invalid email or password")

@@ -368,6 +368,18 @@ Stop the original frontend first or set a separate `GOV_WEB_PORT`. Restore check
 
 ## Optional free native HTTPS demo
 
+### Private local account recovery
+
+If you forget the native account email or password, use a real interactive PowerShell terminal in the project root:
+
+```powershell
+.\.venv\Scripts\python.exe backend\manage.py recover-account
+```
+
+This trusted laptop-owner command displays account identities **only locally**. Select your account by number; the unique bootstrap administrator is labelled as a candidate, not automatically selected. Confirm with `RESET`, then enter a new 12–128 character password twice at hidden prompts. Echo fallback is refused. Do not paste the local account list or credentials into chat. Successful output: `Password recovered; all existing sessions revoked. Account identity and role preserved.` All access/refresh sessions for that account are revoked in the same transaction as the password replacement. Other accounts, roles, documents and configuration are unchanged; inactive accounts are refused. Login is serialized with recovery so a concurrent old-password login cannot leave a surviving session.
+
+If no listed account is yours, select `N` to privately provision a new **ordinary** account with your own email, username and hidden password. Duplicate identities fail without replacing an account. Enter cancels. No recovery password is accepted through arguments, stored in a script or supplied by default. Public registration and password recovery remain unavailable. Sign in at the current printed HTTPS URL using the selected registered email and new password; old tabs may use an obsolete tunnel hostname. Authentication throttling remains enabled.
+
 Prepared on 2026-10-11 with the tunnel stopped. Subsequent explicitly authorized public HTTPS/auth/Ask checks passed; see the [activation record](VERIFICATION.md#explicit-public-https-activation-2026-10-11). This uses the existing native database/models/source restrictions. It is a small invited demonstration, not a production hosting release. No paid plan, card trial, purchased domain or Cloudflare account is required for [Quick Tunnel](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/).
 
 Use project-root PowerShell. Existing owners/configuration/data are preserved:

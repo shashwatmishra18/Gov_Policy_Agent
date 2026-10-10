@@ -1,21 +1,22 @@
 """Private, interactive local setup/admin commands. Never pass secrets as arguments."""
 import argparse
-from getpass import getpass
+from getpass import getpass, GetPassWarning
 from pathlib import Path
 import secrets
 import sys
+import warnings
 
 sys.path.insert(0, str(Path(__file__).parent))
 
 from dotenv import dotenv_values, set_key
 import psycopg
 from psycopg import sql
-from sqlalchemy import select, text
+from sqlalchemy import select, text, update, func
 from sqlalchemy.orm import Session
 
 from app.config import ROOT, Settings
 from app.database import make_engine
-from app.models import User
+from app.models import User, AuthSession
 from app.schemas import Registration
 from pwdlib import PasswordHash
 
@@ -92,14 +93,86 @@ def bootstrap_admin():
     print("First admin created. No default credentials were used.")
 
 
+def hidden_password():
+    """Never fall back to echoing a password when the terminal is unsuitable."""
+    if not sys.stdin.isatty():
+        raise ValueError("Interactive terminal required")
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", GetPassWarning)
+        password = getpass("New password (12-128 characters, hidden): ")
+        repeated = getpass("Repeat new password (hidden): ")
+    if password != repeated or not 12 <= len(password) <= 128:
+        raise ValueError("Invalid password or confirmation")
+    return password
+
+
+def reset_account(engine, user_id, password):
+    """Atomically replace a selected active account's password and revoke sessions."""
+    if not 12 <= len(password) <= 128:
+        raise ValueError("Invalid password length")
+    encoded = PasswordHash.recommended().hash(password)
+    with Session(engine) as session, session.begin():
+        selected = session.execute(select(User.id, User.active).where(
+            User.id == user_id).with_for_update()).one_or_none()
+        if selected is None or not selected.active:
+            raise ValueError("Active account required")
+        session.execute(update(User).where(User.id == user_id).values(password_hash=encoded))
+        session.execute(update(AuthSession).where(AuthSession.user_id == user_id,
+            AuthSession.revoked_at.is_(None)).values(revoked_at=func.now()))
+
+
+def provision_user(engine, registration):
+    """Local provisioning always creates an ordinary account, never an administrator."""
+    with Session(engine) as session, session.begin():
+        session.add(User(email=str(registration.email), username=registration.username,
+            password_hash=PasswordHash.recommended().hash(registration.password.get_secret_value()),
+            preferred_language=registration.preferred_language, role="user"))
+
+
+def recover_account():
+    engine = make_engine(Settings())
+    try:
+        with Session(engine) as session:
+            accounts = session.execute(select(User.id, User.email, User.username,
+                User.role, User.active, User.created_at).order_by(User.created_at)).all()
+        print("Private local account selection. Do not copy this list into chat.")
+        admins = [account for account in accounts if account.role == "admin"]
+        for number, account in enumerate(accounts, 1):
+            note = " (original bootstrap administrator candidate)" if account.role == "admin" and len(admins) == 1 else ""
+            print(f"{number}. {account.email} | {account.username} | {account.role} | active={account.active}{note}")
+        choice = input("Choose your account number, N for a new ordinary account, or Enter to cancel: ").strip()
+        if not choice:
+            print("Cancelled; no account changed.")
+            return
+        if choice.lower() == "n":
+            email = input("New ordinary account email: ").strip()
+            username = input("New ordinary account username: ").strip()
+            provision_user(engine, Registration(email=email, username=username, password=hidden_password()))
+            print("Ordinary account created. No existing accounts changed.")
+            return
+        if not choice.isdigit() or not 1 <= int(choice) <= len(accounts):
+            raise ValueError("Invalid selection")
+        account = accounts[int(choice) - 1]
+        if not account.active:
+            raise ValueError("Inactive account cannot be recovered with this command")
+        if input("Reset only this selected account? Type RESET to confirm: ").strip() != "RESET":
+            print("Cancelled; no account changed.")
+            return
+        reset_account(engine, account.id, hidden_password())
+        print("Password recovered; all existing sessions revoked. Account identity and role preserved.")
+    finally:
+        engine.dispose()
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", choices=["configure", "bootstrap-admin"])
+    parser.add_argument("command", choices=["configure", "bootstrap-admin", "recover-account"])
     args = parser.parse_args()
     try:
         if not sys.stdin.isatty():
             raise ValueError("Use an interactive local terminal for hidden input")
-        configure() if args.command == "configure" else bootstrap_admin()
+        {"configure": configure, "bootstrap-admin": bootstrap_admin,
+         "recover-account": recover_account}[args.command]()
     except Exception:
         # Do not echo DB exceptions/DSNs, validation inputs or passwords.
         print("Command failed. Check local service, credentials, input and database ownership; no secret details printed.", file=sys.stderr)
