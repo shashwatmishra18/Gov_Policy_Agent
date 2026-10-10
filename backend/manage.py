@@ -13,6 +13,8 @@ import psycopg
 from psycopg import sql
 from sqlalchemy import select, text, update, func
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import DBAPIError, IntegrityError
+from pydantic import ValidationError
 
 from app.config import ROOT, Settings
 from app.database import make_engine
@@ -93,29 +95,64 @@ def bootstrap_admin():
     print("First admin created. No default credentials were used.")
 
 
+class RecoveryInputError(ValueError):
+    """Only fixed, non-sensitive local messages may be displayed."""
+
+
+def safe_failure(error):
+    if isinstance(error, RecoveryInputError):
+        return str(error)
+    if isinstance(error, GetPassWarning):
+        return "Hidden input unavailable. Use an interactive PowerShell terminal; no password reset attempted."
+    if isinstance(error, ValidationError):
+        return "Invalid email, username or password format. No account created; check the local inputs."
+    if isinstance(error, IntegrityError):
+        return "Account creation failed: email or username already exists, or an account constraint failed."
+    if isinstance(error, DBAPIError):
+        code = getattr(error.orig, 'sqlstate', None)
+        if code == '42501':
+            return "Database permission denied. Recovery could not complete; ask the local maintainer to check permissions."
+        if code in {'55P03', '40P01', '57014'}:
+            return "Database transaction interrupted or busy. Recovery did not complete; retry locally."
+        return "Database operation failed. Commit outcome is unconfirmed; check account update status before retrying."
+    return "Command failed before confirmed completion. No secret details printed; local diagnosis required."
+
+
 def hidden_password():
     """Never fall back to echoing a password when the terminal is unsuitable."""
     if not sys.stdin.isatty():
-        raise ValueError("Interactive terminal required")
+        raise RecoveryInputError("Interactive terminal required; no password reset attempted.")
     with warnings.catch_warnings():
         warnings.simplefilter("error", GetPassWarning)
         password = getpass("New password (12-128 characters, hidden): ")
         repeated = getpass("Repeat new password (hidden): ")
-    if password != repeated or not 12 <= len(password) <= 128:
-        raise ValueError("Invalid password or confirmation")
+    if password != repeated:
+        raise RecoveryInputError("Passwords do not match. No password change attempted; enter both again.")
+    if not 12 <= len(password) <= 128:
+        raise RecoveryInputError("Password must contain 12-128 characters. No password change attempted.")
     return password
+
+
+def retry_hidden_password():
+    while True:
+        try:
+            return hidden_password()
+        except RecoveryInputError as error:
+            print(safe_failure(error))
+            if not sys.stdin.isatty() or input("Retry hidden password entry for this selection? Type Y, or Enter to cancel: ").strip().lower() != 'y':
+                return None
 
 
 def reset_account(engine, user_id, password):
     """Atomically replace a selected active account's password and revoke sessions."""
     if not 12 <= len(password) <= 128:
-        raise ValueError("Invalid password length")
+        raise RecoveryInputError("Password must contain 12-128 characters. No password change attempted.")
     encoded = PasswordHash.recommended().hash(password)
     with Session(engine) as session, session.begin():
         selected = session.execute(select(User.id, User.active).where(
             User.id == user_id).with_for_update()).one_or_none()
         if selected is None or not selected.active:
-            raise ValueError("Active account required")
+            raise RecoveryInputError("Selected account is missing or inactive. No password change committed.")
         session.execute(update(User).where(User.id == user_id).values(password_hash=encoded))
         session.execute(update(AuthSession).where(AuthSession.user_id == user_id,
             AuthSession.revoked_at.is_(None)).values(revoked_at=func.now()))
@@ -147,18 +184,26 @@ def recover_account():
         if choice.lower() == "n":
             email = input("New ordinary account email: ").strip()
             username = input("New ordinary account username: ").strip()
-            provision_user(engine, Registration(email=email, username=username, password=hidden_password()))
+            password = retry_hidden_password()
+            if password is None:
+                print("Cancelled; no account changed.")
+                return
+            provision_user(engine, Registration(email=email, username=username, password=password))
             print("Ordinary account created. No existing accounts changed.")
             return
         if not choice.isdigit() or not 1 <= int(choice) <= len(accounts):
-            raise ValueError("Invalid selection")
+            raise RecoveryInputError("Invalid account number. No password reset attempted.")
         account = accounts[int(choice) - 1]
         if not account.active:
-            raise ValueError("Inactive account cannot be recovered with this command")
+            raise RecoveryInputError("Selected account is inactive; recovery refused. No account changed.")
         if input("Reset only this selected account? Type RESET to confirm: ").strip() != "RESET":
             print("Cancelled; no account changed.")
             return
-        reset_account(engine, account.id, hidden_password())
+        password = retry_hidden_password()
+        if password is None:
+            print("Cancelled; no account changed.")
+            return
+        reset_account(engine, account.id, password)
         print("Password recovered; all existing sessions revoked. Account identity and role preserved.")
     finally:
         engine.dispose()
@@ -170,10 +215,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     try:
         if not sys.stdin.isatty():
-            raise ValueError("Use an interactive local terminal for hidden input")
+            raise RecoveryInputError("Use an interactive local terminal for hidden input; no account changed.")
         {"configure": configure, "bootstrap-admin": bootstrap_admin,
          "recover-account": recover_account}[args.command]()
-    except Exception:
+    except Exception as error:
         # Do not echo DB exceptions/DSNs, validation inputs or passwords.
-        print("Command failed. Check local service, credentials, input and database ownership; no secret details printed.", file=sys.stderr)
+        print(safe_failure(error), file=sys.stderr)
         sys.exit(1)

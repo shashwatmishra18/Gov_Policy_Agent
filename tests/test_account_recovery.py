@@ -125,3 +125,44 @@ def test_hidden_input_refuses_echo_and_mismatch(monkeypatch):
     monkeypatch.setattr(manage.sys.stdin, 'isatty', lambda: False)
     with pytest.raises(ValueError):
         manage.hidden_password()
+
+
+def test_clear_validation_and_same_selection_retry(monkeypatch, capsys):
+    monkeypatch.setattr(manage.sys.stdin, 'isatty', lambda: True)
+    values = iter((NEW, NEW + 'different', 'short', 'short', NEW, NEW))
+    monkeypatch.setattr(manage, 'getpass', lambda prompt: next(values))
+    monkeypatch.setattr('builtins.input', lambda prompt: 'y')
+    assert manage.retry_hidden_password() == NEW
+    displayed = capsys.readouterr().out
+    assert 'Passwords do not match' in displayed
+    assert '12-128 characters' in displayed
+    assert NEW not in displayed and 'short' not in displayed
+
+
+def test_failure_after_password_update_rolls_back_entire_reset(api):
+    client, _, engine = api
+    result, _ = signup_login(client)
+    user_id = UUID(result['user']['id'])
+    def fail_revocation(connection, cursor, statement, parameters, context, executemany):
+        if statement.startswith('UPDATE auth_sessions'):
+            raise RuntimeError('Synthetic transaction fault')
+    event.listen(engine, 'before_cursor_execute', fail_revocation)
+    try:
+        with pytest.raises(RuntimeError):
+            manage.reset_account(engine, user_id, NEW)
+    finally:
+        event.remove(engine, 'before_cursor_execute', fail_revocation)
+    assert client.get('/auth/me', headers=auth_header(result['access_token'])).status_code == 200
+    assert client.post('/auth/login', headers=ORIGIN, json=LOGIN).status_code == 200
+    assert client.post('/auth/login', headers=ORIGIN, json={**LOGIN, 'password': NEW}).status_code == 401
+
+
+def test_failure_messages_never_echo_exception_inputs():
+    from sqlalchemy.exc import OperationalError
+    class DatabaseFault(Exception):
+        sqlstate = '42501'
+    sensitive = NEW + ' private connection details'
+    failure = OperationalError(sensitive, {'password': sensitive}, DatabaseFault(sensitive))
+    assert 'permission denied' in manage.safe_failure(failure)
+    assert sensitive not in manage.safe_failure(failure)
+    assert sensitive not in manage.safe_failure(RuntimeError(sensitive))
