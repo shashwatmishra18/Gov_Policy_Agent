@@ -364,3 +364,50 @@ docker compose -p gov-restored up -d api worker frontend
 ```
 
 Stop the original frontend first or set a separate `GOV_WEB_PORT`. Restore checks schema emptiness, empty originals, checksums, pins and archive paths before writing. A mid-restore failure needs diagnosis in that isolated target, not another restore over nonempty records. Prepare/reuse models for that project, start its single index/RAG owner, and queue a new index rebuild. SQL provenance/answer snapshots remain; verify original downloads and private history. Retention still applies. Unset `GOV_BACKUP_DIR` afterward. Isolated rehearsal results are in VERIFICATION.
+
+
+## Optional free native HTTPS demo
+
+Prepared on 2026-10-11; external connectivity is deliberately unverified because the tunnel was kept stopped. This uses the existing native database/models/source restrictions. It is a small invited demonstration, not a production hosting release. No paid plan, card trial, purchased domain or Cloudflare account is required for [Quick Tunnel](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/).
+
+Use project-root PowerShell. Existing owners/configuration/data are preserved:
+
+```powershell
+.\scripts\native.ps1 preflight
+.\scripts\native.ps1 start
+.\scripts\demo.ps1 prepare
+.\scripts\demo.ps1 check
+```
+
+`prepare` builds a separate frontend in ignored `runtime/demo-frontend`, with relative same-origin API URLs and demo-only navigation. It reuses/downloads the official Windows x64 cloudflared **2026.10.0**, verifying SHA256 `86aee4017b26625cee8484c113558f48effa4cd47f7aa05fcf425604e5d2b23c` against the [official release](https://github.com/cloudflare/cloudflared/releases/tag/2026.10.0). It never starts a tunnel. Native `.env`, Vite build/configuration and model stores are untouched. `check` requires existing healthy ingestion/index/answer owners and pinned project Ollama. If a personal `.cloudflared/config.yml` or `config.yaml` exists, it refuses rather than modifying that configuration.
+
+Optional local-only browser check:
+
+```powershell
+.\scripts\demo.ps1 local-check
+# Open http://127.0.0.1:8765/ in a browser; this is HTTP with local-only cookies.
+# In a second project-root terminal:
+.\scripts\demo.ps1 stop
+.\scripts\demo.ps1 status
+```
+
+Pre-provision an **ordinary** demonstration account using the native Register page privately. Public registration, administration, analytics and diagnostics are blocked. No default account/password is provided. Avoid administrator credentials and personal information in the public demonstration; authentication still protects private History/Saved/feedback. Search requires login too.
+
+**Next command when intentionally opening the public demo:**
+
+```powershell
+.\scripts\demo.ps1 start
+```
+
+Keep that foreground terminal open. It creates an accountless Quick Tunnel to **only `http://127.0.0.1:8765`**, waits up to 60 seconds for a valid generated HTTPS hostname, then starts the built frontend/restricted API with exact Host/origin and Secure/HttpOnly/SameSite=Strict refresh cookies. It never exposes native 8000/5173, PostgreSQL, project/personal Ollama, index IPC, private files, metrics or development diagnostics. Connector metrics are loopback-only on 20249. The application entry closes on a failed start. Child processes are owned/contained; stop closes the connector first and leaves native services/data intact.
+
+Open the printed HTTPS URL, sign in again, then verify Search, a historical English/Hindi Ask, exact citation inspection, assessment, Saved and feedback from that external URL before sharing it. Browser-to-Cloudflare HTTPS and the real proxy/Host/cookie exchange have **not** been demonstrated in this readiness task. A local simulated-HTTPS test is not external TLS proof. Outbound network restrictions can still prevent connection; inspect ignored `runtime/demo-control` logs privately. Do not paste logs/tokens into public issues.
+
+Shutdown with **Ctrl+C** in its terminal, or from another project-root terminal:
+
+```powershell
+.\scripts\demo.ps1 stop
+.\scripts\demo.ps1 status
+```
+
+Wait for the owning terminal to finish and status to show stopped. The laptop must stay awake, connected and running the native services. Sleep/network loss closes availability. URL is temporary/random and changes after restart, so redistribute it and sign in at the new hostname. No uptime SLA; 200 concurrent in-flight requests produce 429 when exceeded; SSE is unsupported (this app polls). These are provider limits, not model concurrency: the app still permits one pending answer job, with conservative shared-proxy authentication throttling. Use only a few invited visitors. Cloudflare terminates TLS and processes application traffic; this is not end-to-end encryption bypassing the provider. No router port forwarding, firewall relaxation or private service publication is needed. Known security/dependency and language limits remain in [security review](SECURITY_REVIEW.md) and [verification](VERIFICATION.md).

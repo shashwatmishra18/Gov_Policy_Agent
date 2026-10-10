@@ -293,3 +293,40 @@ The valid existing HTTP browser tab was permitted this phase; the old encoded er
 Synthetic admin analytics visibly labeled the dataset as test-only: 23 retained two-day-old fixture answers, one current synthetic helpful vote (1/23 participation), zero valid latency samples/23 exclusions. A one-day window showed zero answer runs/votes, null rates/latency while independently recent processing records remained counted. Private question/comment text was absent from the analytics view. Live admin analytics showed 20 retained development runs (6 answered, 4 partial, 5 abstained, 3 clarification, 1 failed, 1 cancelled), 9 English/11 Hindi, 20 recorded timing samples, zero votes, participation 0/10 and helpful rate unavailable. These preexisting development records are not independent accuracy or representative satisfaction evidence. The restored API's transient loading failure was resolved by the visible Retry control.
 
 Limits: browser checks covered shared History/Saved feedback components and existing Ask integration; no fresh Ask generation was requested merely to exercise feedback. No broad screen-reader/real-device or independent human evaluation is claimed. Technical expanded analytics definitions retain English text in the Hindi interface. Current votes can change retrospective cohorts; normal retention changes totals; votes are self-selected and remain outside numerical evidence quality. No feedback about abstentions/clarification, private admin comment browser, moderation/export workflow or independent correctness evaluation was added. Part 11 remains unstarted.
+
+
+## Native demo readiness (2026-10-11)
+
+Recovered clean local/remote main at Part 12 `ddd77be91d45068cdccc32c4640ea0f1d6f4458a`. Native preflight passed. Existing API/frontend/ingestion owners were reused; only missing index and RAG owners started. Index readiness and project Ollama 0.17.1 passed, with one owner per service. PostgreSQL, personal Ollama and private configuration/models/originals were preserved; isolated Docker projects remain stopped.
+
+Real existing E5 retrieval returned five eligible passages per historical question. Real pinned Qwen generation/judge, SQL provenance and current source gates were used; no model, prompt, guard, rights or corpus changes were needed. These are three new development/readiness records, not the frozen evaluation or broad accuracy evidence.
+
+| Actual question | Final result | Retained claims/citations | Worker / retrieval time |
+| --- | --- | --- | --- |
+| In the historical 2025 PM-KISAN factsheet, what annual assistance is provided to landholding farmer families? | answered | 1 / 1; exact valid provenance, supported_by_check | 12,493.96 / 125.24 ms |
+| 2025 के ऐतिहासिक पीएम-किसान तथ्यपत्र के अनुसार भूमि रखने वाले किसान परिवारों को सालाना कितनी सहायता दी जाती थी? | partial | 1 / 1; exact valid provenance, supported_by_check | 15,909.27 / 241.48 ms |
+| Am I eligible for PM-KISAN today under the current policy? | insufficient_evidence | 0 / 0; no generation | 201.71 / 157.72 ms |
+
+Both factual results describe historical annual Rs 6,000 and three instalments. Original PIB physical page 2/exact recorded span inspection returned protected text successfully. Both assessments show 100% retained-claim citation coverage; five other numerical dimensions and aggregates remain unavailable. English used one generation; Hindi used two attempts and retained only one claim. Hindi is incomplete and has awkward Aadhaar transliteration; acceptance by the same-model heuristic is not independent semantic certification. Historical limitations, whole-passage budget omissions and partial scope remain visible.
+
+Actual native browser: generated ordinary verification-account login, English and Hindi history/assessment/cited-text inspection, save→Saved→reopen, helpful feedback save and removal passed; current-policy abstention was inspected. New verification credentials and outputs/screenshots are ignored private runtime files. The labelled temporary feedback was removed; live feedback remains zero. Comparing the original baseline IDs confirmed all **20** pre-existing answer snapshots unchanged; three new readiness answers were added. Corpus stays **4 versions / 171 original pages / 410 provisional chunks / 0 OCR reviews**, schema 0009. An older full-set comparison initially reported failure because it included the new IDs; the original-ID digest comparison passed without rewriting its baseline.
+
+Demo boundary tests use simulated HTTPS and dedicated disposable PostgreSQL: **36 passed in 15.19 s**, one existing Starlette/AnyIO deprecation. Tests cover exact public hostname, Secure/HttpOnly/SameSite refresh cookies, real login/refresh, wrong Origin/CSRF/Host/forwarded-host rejection, 64 KiB request cap, unauthenticated history denial, blocked registration/admin/docs/private paths and asset traversal/UNC attempts. An additional mocked supervisor test checks the planned connector flags, inherited-token exclusion, validated Host probe and connector-before-entry shutdown without starting a real tunnel or making network calls. Static files are a fixed in-memory JS/CSS allowlist, not the affected Windows StaticFiles resolver. Local owner start/duplicate rejection/stop preserved native owners. Public tunnel was never started; actual external certificate, connector routing, browser Secure-cookie exchange, network reachability and remote concurrency remain unverified.
+
+Docker evidence is unchanged: CPU Ask timeout **62.17 s**, GPU samples **51.58 / 6.06 s** rejected by evidence-reference checks. Native success does not establish Docker factual success. Frozen Part 11 files/results remain unchanged; no rerun/tuning/backfill was performed. Existing unresolved Python advisories, small historical corpus, one-model support, Hindi errors and limited resources prevent a production-readiness claim.
+
+
+Final ancillary checks: native `preflight` and demo `check` passed; `pip check` found no broken requirements. Normal frontend typecheck/build passed (43 modules, 279.39 kB JS / 83.82 kB gzip, 1.79 s); separate demo build passed (279.18 kB JS / 83.81 kB gzip). npm production dependency audit reported zero vulnerabilities; this does not replace the recorded full Part 11 audit or resolve Python findings. Both frozen-set integrity commands passed without running evaluation. Documentation 144 relative links/command files and public-file scans passed; native/container/generated verification-account secret bytes were excluded. Final diff whitespace check passed. Runtime binary, private logs, account credentials, answers and screenshots remain ignored.
+
+The final loopback built-entry browser also passed ordinary login/logout/session restore, actual five-passage historical Search, saved English answer reopening, Hindi assessment rendering, and private feedback save/removal. React rendered under its self-only script/connect CSP with administration/registration/System links absent. These checks use local HTTP verification mode, not real public Secure-cookie/TLS evidence. Local demo start/stop and duplicate-owner rejection were exercised; final entry/connector metrics listeners and cloudflared processes were absent. All five native services remained running once. Full 146 native/80 Linux Part 12 regressions are retained from the baseline; only the relevant 36-test set was rerun for this profile.
+
+Executed focused verification from project-root PowerShell:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=runtime/demo-verified-tests tests/test_demo.py tests/test_auth_postgres.py tests/test_request_boundaries.py tests/test_security_config.py tests/test_packaging.py
+.\.venv\Scripts\python.exe -m pip check
+npm.cmd --prefix frontend run build
+npm.cmd --prefix frontend audit --omit=dev
+.\.venv\Scripts\python.exe backend\evaluate_frozen.py --check
+.\.venv\Scripts\python.exe backend\evaluate_frozen.py --check --set evaluation_installment_controls_v1
+```

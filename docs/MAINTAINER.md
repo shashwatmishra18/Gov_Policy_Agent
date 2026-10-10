@@ -1,6 +1,6 @@
 # Maintainer state
 
-Updated 2026-10-11. Parts 1–12 have implementation delivered, with partial/unverified requirements recorded below and in the requirement matrix. No further phase or public deployment is authorized. Beginner learning/viva documents remain withdrawn.
+Updated 2026-10-11. Parts 1–12 have implementation delivered, with partial/unverified requirements recorded below and in the requirement matrix. Native free-demo preparation is authorized; the tunnel must stay stopped during readiness. No further numbered phase is authorized. Beginner learning/viva documents remain withdrawn.
 
 ## Part 12 recovered release state
 
@@ -14,7 +14,13 @@ Partial: CPU Ask timed out (62.17 seconds); GPU Qwen loaded fully but two sample
 
 Resume/run: use [SETUP.md](SETUP.md), starting with `.\scripts\native.ps1 status` and `preflight`; start only missing owners. Do not reprovision the native installation. Compose uses generated `runtime/package-context` (regenerate after source changes). QA/restore projects use independent volumes and ignored private backups; normal shutdown preserves them. Never run native and container model owners together. Nine unrelated Docker containers and personal Ollama must remain untouched. Future accepted-answer container validation needs explicit authorization and sufficient resources; it must preserve guards and distinguish development samples from untouched evaluation.
 
-Final local state: both isolated Compose projects were shut down normally without deleting volumes; private rehearsal bundles remain ignored. After continuation, Docker Desktop was no longer running and was not restarted unnecessarily. Native API/frontend/ingestion worker were started once and are managed; index/RAG remain stopped. Use status/preflight before starting model owners.
+Final local state: both isolated Compose projects were shut down normally without deleting volumes; private rehearsal bundles remain ignored. After continuation, Docker Desktop was no longer running and was not restarted unnecessarily. Native API/frontend/ingestion worker were started once and are managed; index/RAG were stopped at the Part 12 release and started once for the subsequent native readiness checks. Use status/preflight before starting model owners.
+
+## Native demo readiness checkpoint
+
+Baseline local/remote Part 12 was verified at `ddd77be91d45068cdccc32c4640ea0f1d6f4458a`. All five native owners are running once; Docker/personal owners/data were preserved. Real native English factual output passed; Hindi retained one factual claim but remains partial/awkward; current entitlement abstained. Exact citations/assessment, ordinary login, Saved and feedback were checked; three labelled readiness answer records were added, original 20 snapshots/corpus unchanged, temporary feedback removed. Frozen evaluation and Docker failure records remain unchanged.
+
+Prepared a separate built frontend/restricted same-origin production entry, exact dynamic HTTPS Host/Origin/Secure cookies, blocked registration/admin/diagnostics/private paths, contained start/stop and pinned official free Quick Tunnel binary. No tunnel was started. Fixed asset allowlist avoids the known Windows StaticFiles resolver advisory. Native `.env`/database/models/source gates were not rewritten. Final checks: 36 focused tests, dependency/frontend build/audit, both frozen integrity checks, documentation links, private-secret exclusion and original-record preservation passed. Local demo entry was stopped; no tunnel/metrics listener remains. Simulated HTTPS tests passed; external TLS/network/cookie routing remains pending. Use the existing commands in [SETUP](SETUP.md#optional-free-native-https-demo); intentional next activation is `.\scripts\demo.ps1 start` from project-root PowerShell. Keep laptop awake/connected; temporary URL changes on restart. Native Hindi wording, same-model support, unresolved Python advisories and tiny corpus remain limits; factual Docker answers remain unverified.
 
 ## Continuation baseline
 
