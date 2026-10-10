@@ -330,3 +330,18 @@ npm.cmd --prefix frontend audit --omit=dev
 .\.venv\Scripts\python.exe backend\evaluate_frozen.py --check
 .\.venv\Scripts\python.exe backend\evaluate_frozen.py --check --set evaluation_installment_controls_v1
 ```
+
+
+## Explicit public HTTPS activation (2026-10-11)
+
+After a separate user instruction, started the prepared free Quick Tunnel with `scripts/demo.ps1 start`. The printed temporary HTTPS URL loaded the built React application in the real browser with a valid certificate; normal Python HTTPS verification also passed (no certificate bypass). Cloudflared registered its outbound QUIC connection. No paid account/service/domain, firewall relaxation or configuration/security changes were needed. The transient URL and connector logs stay outside Git.
+
+Real public ordinary-account login and refresh passed. Observed refresh-cookie attributes were Secure, HttpOnly, SameSite=Strict and `/auth` path. Browser reload restored the session, demonstrating actual public cookie/proxy handling. Authenticated worker readiness was true. Wrong Origin and missing CSRF returned 403; oversized Ask returned 413; anonymous History and readiness endpoints returned 401. Exact public Host worked without forwarded-header trust; foreign Host with forged forwarded Host was rejected at the local entry.
+
+Fresh public English Ask returned `answered`, and fresh Hindi Ask returned `partial`; each retained one factual claim with one exact valid citation. Both protected citation endpoints returned the recorded quote at offsets [0,1056), original PIB physical page 2. Browser inspection confirmed English text, Hindi partial/incompleteness and same-model-support notices, and assessment with 100% retained-claim coverage and unavailable aggregate. Hindi's awkward Aadhaar transliteration remains. These two real runs are development smoke checks on the same historical source, not new frozen evaluation or independent correctness evidence.
+
+Public browser save → Saved → reopen passed; bookmark survived reload. Labelled helpful feedback saved, survived reload and was removed; reopening showed no feedback. Two additional answer records belong only to the existing ordinary verification account. All original 20 answer digests and corpus counts 4/171/410/0 remain unchanged; live feedback is zero. Credentials, raw public outputs and screenshot proof remain ignored.
+
+Public registration, administration/analytics, admin access, OpenAPI/docs, health diagnostics, `.env`, an existing runtime log, original-storage paths and asset UNC paths returned 404. Metrics, Ollama `/api/tags` and index `/query` were also unreachable through the public hostname. Only loopback application entry 8765 is configured as tunnel origin; PostgreSQL/index/project Ollama and connector metrics remain bound to loopback, with one owner each. No application verification failure required security weakening or a retry. Private inspection helpers needed UTF-8 decoding/schema-key corrections; these were local harness issues, not application changes.
+
+At handoff the demo supervisor/connector/entry and all five native services are running. Stop using the existing command in [SETUP](SETUP.md#optional-free-native-https-demo). URL changes after restart; laptop/network/session must stay available. No concurrency/abuse/independent security certification is claimed. Shared-proxy throttling, single pending Ask, corpus/Hindi/dependency limits and Docker CPU/GPU factual-answer failures remain unchanged.

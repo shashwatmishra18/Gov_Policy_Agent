@@ -1,6 +1,6 @@
 # Maintainer state
 
-Updated 2026-10-11. Parts 1–12 have implementation delivered, with partial/unverified requirements recorded below and in the requirement matrix. Native free-demo preparation is authorized; the tunnel must stay stopped during readiness. No further numbered phase is authorized. Beginner learning/viva documents remain withdrawn.
+Updated 2026-10-11. Parts 1–12 have implementation delivered, with partial/unverified requirements recorded below and in the requirement matrix. Native free-demo preparation is authorized; the tunnel stayed stopped during readiness and was subsequently activated by a separate explicit request. No further numbered phase is authorized. Beginner learning/viva documents remain withdrawn.
 
 ## Part 12 recovered release state
 
@@ -21,6 +21,12 @@ Final local state: both isolated Compose projects were shut down normally withou
 Baseline local/remote Part 12 was verified at `ddd77be91d45068cdccc32c4640ea0f1d6f4458a`. All five native owners are running once; Docker/personal owners/data were preserved. Real native English factual output passed; Hindi retained one factual claim but remains partial/awkward; current entitlement abstained. Exact citations/assessment, ordinary login, Saved and feedback were checked; three labelled readiness answer records were added, original 20 snapshots/corpus unchanged, temporary feedback removed. Frozen evaluation and Docker failure records remain unchanged.
 
 Prepared a separate built frontend/restricted same-origin production entry, exact dynamic HTTPS Host/Origin/Secure cookies, blocked registration/admin/diagnostics/private paths, contained start/stop and pinned official free Quick Tunnel binary. No tunnel was started. Fixed asset allowlist avoids the known Windows StaticFiles resolver advisory. Native `.env`/database/models/source gates were not rewritten. Final checks: 36 focused tests, dependency/frontend build/audit, both frozen integrity checks, documentation links, private-secret exclusion and original-record preservation passed. Local demo entry was stopped; no tunnel/metrics listener remains. Simulated HTTPS tests passed; external TLS/network/cookie routing remains pending. Use the existing commands in [SETUP](SETUP.md#optional-free-native-https-demo); intentional next activation is `.\scripts\demo.ps1 start` from project-root PowerShell. Keep laptop awake/connected; temporary URL changes on restart. Native Hindi wording, same-model support, unresolved Python advisories and tiny corpus remain limits; factual Docker answers remain unverified.
+
+## Public demo activation
+
+User explicitly authorized startup after readiness. Public HTTPS frontend/certificate, real Secure-cookie login/refresh/browser reload, authenticated worker readiness, fresh accepted English Ask and correctly partial Hindi Ask, exact citation inspection, assessment, Saved and feedback persistence/removal passed. Restricted/private/model/metrics routes were denied; private listeners remain loopback. No source/model/security/configuration fixes were necessary; frozen evaluation and Docker failure disclosures remain unchanged. Two new ordinary-account verification answers were added; original 20 snapshots/corpus are unchanged and temporary feedback is removed.
+
+At handoff the native owners and demo supervisor are active; the temporary public URL is in the private supervisor terminal/log and user response, not Git. Stop from project-root PowerShell using `.\scripts\demo.ps1 stop`, then wait/check status. The laptop must remain awake/connected and its running session available; restart generates a new URL. Small invited demo only; normal accounts must be provisioned privately. See [verification](VERIFICATION.md#explicit-public-https-activation-2026-10-11).
 
 ## Continuation baseline
 

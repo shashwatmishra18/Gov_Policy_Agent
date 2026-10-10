@@ -368,7 +368,7 @@ Stop the original frontend first or set a separate `GOV_WEB_PORT`. Restore check
 
 ## Optional free native HTTPS demo
 
-Prepared on 2026-10-11; external connectivity is deliberately unverified because the tunnel was kept stopped. This uses the existing native database/models/source restrictions. It is a small invited demonstration, not a production hosting release. No paid plan, card trial, purchased domain or Cloudflare account is required for [Quick Tunnel](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/).
+Prepared on 2026-10-11 with the tunnel stopped. Subsequent explicitly authorized public HTTPS/auth/Ask checks passed; see the [activation record](VERIFICATION.md#explicit-public-https-activation-2026-10-11). This uses the existing native database/models/source restrictions. It is a small invited demonstration, not a production hosting release. No paid plan, card trial, purchased domain or Cloudflare account is required for [Quick Tunnel](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/).
 
 Use project-root PowerShell. Existing owners/configuration/data are preserved:
 
